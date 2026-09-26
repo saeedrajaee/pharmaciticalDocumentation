@@ -1,0 +1,587 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// ۱. مدل کاربران (User)
+// ==========================================
+model User {
+  id                 Int     @id @default(autoincrement())
+  name               String
+  mobile             String  @unique
+  password           String
+  hashedRefreshToken String?
+  expertProvince     String?
+  role               Role    @default(USER)
+
+  // روابط سیستم قبلی
+  DrugProducts  DrugProduct[]
+  batches       Batch[]
+  specification Specification[]
+  results       Result[]
+
+  // روابط سیستم جدید پروژه‌های R&D قراردادی
+  contractProjects               ContractProject[]
+  projectReviewLogs              ProjectReviewLog[]
+  step1LiteratureStudies         Step1LiteratureStudy[]
+  step3RawMaterialCoas           Step3RawMaterialCoa[]
+  step3stds                      Step3std[]
+  step2FormulaBoms               Step2FormulaBom[]
+  step4PreFormulations           Step4PreFormulation[]
+  step4PreFormulationParts       Step4PreFormulationPart[]
+  step4Packagings                Step4Packaging[]
+  step5AnalyticalDevlopRaws      Step5AnalyticalDevlopRaw[]
+  step5AnalyticalDevlopFinisheds Step5AnalyticalDevlopFinished[]
+}
+
+// ==========================================
+// ۲. مدل‌های سیستم قبلی سامانه (دست‌نخورده)
+// ==========================================
+model DrugProduct {
+  id                  Int            @id @default(autoincrement())
+  finishedProductName String
+  api                 String
+  dosageForm          String
+  strength            String
+  strengthUnit        String
+  strongCondition     String
+  userId              Int?
+  user                User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  specification       Specification?
+  batches             Batch[]
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+}
+
+model Specification {
+  id                    Int     @id @default(autoincrement())
+  descriptionAppearance String?
+  identification1       String?
+  identification2       String?
+  assayMin              Float?
+  assayMax              Float?
+  pHMin                 Float?
+  pHMax                 Float?
+  clarity               String?
+  particulatedMater25   Float?
+  particulatedMater10   Float?
+  sterility             String?
+  leakTest              String?
+  endotoxin             Float?
+  osmolarityMin         Float?
+  osmolarityMax         Float?
+  preservativeContent   Float?
+  uniformityOfDosage    String?
+
+  drugProductId Int                     @unique
+  drugProduct   DrugProduct             @relation(fields: [drugProductId], references: [id], onDelete: Cascade)
+  impurities    SpecificationImpurity[]
+  userId        Int?
+  user          User?                   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+}
+
+model Batch {
+  id            Int         @id @default(autoincrement())
+  batchDate     DateTime
+  batchNumber   String?
+  description   String?
+  uploadDoc     String?
+  userId        Int?
+  drugProductId Int
+  user          User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  drugProduct   DrugProduct @relation(fields: [drugProductId], references: [id], onDelete: Cascade)
+  results       Result[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Result {
+  id                  Int                     @id @default(autoincrement())
+  accelrator          String?
+  month               Int?
+  appearance          Boolean                 @default(true)
+  identification1     Boolean                 @default(true)
+  identification2     Boolean                 @default(true)
+  assay               Float?
+  pH                  Float?
+  clarity             Boolean                 @default(true)
+  particulatedMater25 Float?
+  particulatedMater10 Float?
+  leakTest            Boolean                 @default(true)
+  sterility           Boolean                 @default(true)
+  endotoxin           Float?
+  osmolarity          Float?
+  uniformityOfDosage  Float?
+  batchId             Int
+  batch               Batch                   @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  impurities          SpecificationImpurity[]
+  userId              Int?
+  user                User?                   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+}
+
+model SpecificationImpurity {
+  id              Int            @id @default(autoincrement())
+  name            String
+  value           Float?
+  description     String?
+  specificationId Int?
+  specification   Specification? @relation(fields: [specificationId], references: [id], onDelete: Cascade)
+  resultId        Int?
+  result          Result?        @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+// لاگ تاریخچه گردش‌کار و بررسی‌های R&D
+model ProjectReviewLog {
+  id         Int             @id @default(autoincrement())
+  projectId  Int
+  project    ContractProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  step       ProjectStep
+  action     ReviewAction
+  comment    String?
+  reviewerId Int?
+  reviewer   User?           @relation(fields: [reviewerId], references: [id], onDelete: SetNull)
+  createdAt  DateTime        @default(now())
+}
+
+// ==========================================
+// ۳. سیستم مدیریت پروژه‌های قراردادی R&D
+// ==========================================
+
+model ContractProject {
+  id             Int           @id @default(autoincrement())
+  projectCode    String        @unique
+  title          String
+  apiName        String
+  dosageForm     String
+  strength       String
+  developerName  String
+  developerPhone String
+  step           String? //تا فرآیندی کامل نشده است از این استپ استفاده میکنم
+  currentStep    ProjectStep   @default(STEP_1_TO_4)
+  status         ProjectStatus @default(DRAFT)
+
+  userId Int?
+  user   User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // روابط گام‌ها
+  reviewLogs           ProjectReviewLog[]
+  step1Studies         Step1LiteratureStudy[]
+  step2Boms            Step2FormulaBom[]
+  step3RawCoas         Step3RawMaterialCoa[]
+  step3stds            Step3std[]
+  step4PreFormulations Step4PreFormulation[]
+  specifications       ContractSpecification[]
+  batches              ContractBatch[]
+  step8Formulations    Step8FormulationBOM[]
+  step8Tanks           Step8ManufacturingTank[]
+  step9Trials          Step9ScaleUpTrial[]
+  step11CtdModules     Step11CtdModule[]
+
+  createdAt                     DateTime                       @default(now())
+  updatedAt                     DateTime                       @updatedAt
+  step4Packagings               Step4Packaging[]
+  step5AnalyticalDevlopRaws     Step5AnalyticalDevlopRaw[]
+  step5AnalyticalDevlopFinished Step5AnalyticalDevlopFinished?
+}
+
+// گام ۱: مطالعات سورس و مقالات علمی (چندردیفی)
+model Step1LiteratureStudy {
+  id        Int             @id @default(autoincrement())
+  projectId Int
+  project   ContractProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    Int?
+  user      User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  type      String
+  title     String
+  reference String
+  summary   String?
+  fileUrl   String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@index([projectId])
+  @@index([userId])
+}
+
+// گام ۲: فرمولاسیون پیشنهادی اولیه / BOM (چندردیفی)
+model Step2FormulaBom {
+  id         Int             @id @default(autoincrement())
+  projectId  Int
+  project    ContractProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  bomFileUrl String?
+  createdAt  DateTime        @default(now())
+  userId     Int?
+  user       User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  updatedAt  DateTime        @updatedAt
+
+  @@index([projectId])
+  @@index([userId])
+}
+
+// گام ۳ (تب ۱): COA مواد اولیه برای آنالیز(چندردیفی)
+model Step3RawMaterialCoa {
+  id                 Int             @id @default(autoincrement())
+  projectId          Int
+  project            ContractProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  materialName       String
+  manufacturer       String
+  pharmaCopia        String? //USP, BP, EP, JP, NA
+  pharmaCopiaFileUrl String?
+  coaFileUrl         String?
+  chekedByQC         Boolean //Yes, No
+  createdAt          DateTime        @default(now())
+  userId             Int?
+  user               User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  updatedAt          DateTime        @updatedAt
+
+  @@index([projectId])
+  @@index([userId])
+}
+
+// گام ۳ (تب ۲): COA بچ فرمولاسیون آزمایشگاهی شامل مواد فرمولاسیون(چندردیفی)
+model Step3std {
+  id                         Int             @id @default(autoincrement())
+  projectId                  Int
+  project                    ContractProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  stdName                    String //Name
+  stdFileUrl                 String? //File
+  description                String? //Description
+  resultFormulationMaterials Boolean //
+  userId                     Int?
+  user                       User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt                  DateTime        @default(now())
+  updatedAt                  DateTime        @updatedAt
+
+  @@index([projectId])
+  @@index([userId])
+}
+
+// گام ۴:پیش فرمولاسیون
+model Step4PreFormulation {
+  id                       Int                       @id @default(autoincrement())
+  projectId                Int
+  project                  ContractProject           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  formul                   String
+  description              String?
+  createdAt                DateTime                  @default(now())
+  userId                   Int?
+  user                     User?                     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  updatedAt                DateTime                  @updatedAt
+  step4PreFormulationParts Step4PreFormulationPart[]
+
+  @@index([projectId])
+  @@index([userId])
+}
+
+model Step4PreFormulationPart {
+  id                    Int                 @id @default(autoincrement())
+  step4PreFormulationId Int
+  step4PreFormulation   Step4PreFormulation @relation(fields: [step4PreFormulationId], references: [id], onDelete: Cascade)
+  componentsName        String?
+  componentsAmount      Float?
+  componentsRole        String?
+  manufacturingProcess  String?
+  createdAt             DateTime            @default(now())
+  userId                Int?
+  user                  User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+  updatedAt             DateTime            @updatedAt
+
+  @@index([userId])
+}
+
+// گام ۴: پکیجینگ
+model Step4Packaging {
+  id             Int             @id @default(autoincrement())
+  projectId      Int
+  project        ContractProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  packaagingName String
+  manufactor     String?
+  coa            String? //file
+  urs            String? //file
+  createdAt      DateTime        @default(now())
+  userId         Int?
+  user           User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  updatedAt      DateTime        @updatedAt
+
+  @@index([projectId])
+  @@index([userId])
+}
+
+// گام ۵: متدهای آنالیز خام
+model Step5AnalyticalDevlopRaw {
+  id          Int             @id @default(autoincrement())
+  projectId   Int
+  project     ContractProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name        String
+  manufactor  String?
+  specFileUrl String?
+  moaFileUrl  String?
+  dmfFileUrl  String?
+  createdAt   DateTime        @default(now())
+  userId      Int?
+  user        User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  updatedAt   DateTime        @updatedAt
+}
+
+// گام ۵: متدهای آنالیز Finished
+model Step5AnalyticalDevlopFinished {
+  id                 Int             @id @default(autoincrement())
+  projectId          Int             @unique  // <-- اضافه کردن @unique در اینجا
+  project            ContractProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  pharmacopia        String  //USP, BP, EP, JP, NA
+  pharmacopiaFileUrl String?
+  specFileUrl        String?
+  moaFileUrl         String?
+  createdAt          DateTime        @default(now())
+  userId             Int?
+  user               User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  updatedAt          DateTime        @updatedAt
+}
+
+
+// گام ۶: مشخصات نهایی محصول (Final Specification) + مشخصات مرحله Scale-Up
+model ContractSpecification {
+  id        Int             @id @default(autoincrement())
+  projectId Int
+  project   ContractProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  stage     StabilityStage  @default(FINISHED_PRODUCT)
+
+  descriptionAppearance String?
+  identification1       String?
+  identification2       String?
+  assayMin              Float?
+  assayMax              Float?
+  pHMin                 Float?
+  pHMax                 Float?
+  clarity               String?
+  particulatedMater25   Float?
+  particulatedMater10   Float?
+  sterility             String?
+  leakTest              String?
+  endotoxin             Float?
+  osmolarityMin         Float?
+  osmolarityMax         Float?
+  preservativeContent   Float?
+  uniformityOfDosage    Float?  @default(15.0)
+
+  impurities ContractSpecImpurity[]
+  createdAt  DateTime               @default(now())
+  updatedAt  DateTime               @updatedAt
+
+  @@unique([projectId, stage])
+}
+
+// ناخالصی‌های تعریف‌شده در Spec
+model ContractSpecImpurity {
+  id              Int                   @id @default(autoincrement())
+  specificationId Int
+  specification   ContractSpecification @relation(fields: [specificationId], references: [id], onDelete: Cascade)
+  name            String
+  limit           Float
+  description     String?
+  createdAt       DateTime              @default(now())
+}
+
+// گام ۷ و ۱۰: بچ‌های مطالعات پایداری (پایلوت آزمایشگاهی و اسکیل‌آپ)
+model ContractBatch {
+  id          Int             @id @default(autoincrement())
+  projectId   Int
+  project     ContractProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  stage       StabilityStage  @default(FINISHED_PRODUCT)
+  batchNumber String
+  batchDate   DateTime
+  description String?
+  uploadDoc   String?
+
+  results   ContractResult[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@unique([projectId, stage, batchNumber])
+}
+
+// نتایج ایستگاه‌های زمانی پایداری
+model ContractResult {
+  id        Int                @id @default(autoincrement())
+  batchId   Int
+  batch     ContractBatch      @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  condition StabilityCondition
+  month     Int
+
+  appearance          Boolean @default(true)
+  identification1     Boolean @default(true)
+  identification2     Boolean @default(true)
+  assay               Float?
+  pH                  Float?
+  clarity             Boolean @default(true)
+  particulatedMater25 Float?
+  particulatedMater10 Float?
+  leakTest            Boolean @default(true)
+  sterility           Boolean @default(true)
+  endotoxin           Float?
+  osmolarity          Float?
+  uniformityOfDosage  Float?
+
+  impurities ContractResultImpurity[]
+  createdAt  DateTime                 @default(now())
+  updatedAt  DateTime                 @updatedAt
+
+  @@unique([batchId, condition, month])
+}
+
+// نتایج عددی ناخالصی‌ها در پایداری
+model ContractResultImpurity {
+  id        Int            @id @default(autoincrement())
+  resultId  Int
+  result    ContractResult @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  name      String
+  value     Float
+  createdAt DateTime       @default(now())
+}
+
+// گام ۸ (تب ۱): فرمولاسیون نهایی، BOM و مشخصات بچ صنعتی
+model Step8FormulationBOM {
+  id             Int             @id @default(autoincrement())
+  projectId      Int
+  project        ContractProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  materialName   String
+  standardGrade  String
+  unitFormula    Float
+  unit           String
+  batchQuantity  Float
+  batchUnit      String
+  formulaFileUrl String?
+  createdAt      DateTime        @default(now())
+}
+
+// گام ۸ (تب ۲): مشخصات تانک و خط ساخت
+model Step8ManufacturingTank {
+  id             Int             @id @default(autoincrement())
+  projectId      Int
+  project        ContractProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tankTag        String
+  tankCapacity   Float
+  tankMaterial   String
+  filterSpecs    String?
+  flowDiagramUrl String?
+  createdAt      DateTime        @default(now())
+}
+
+// گام ۹: گزارش بچ‌های اسکیل‌آپ و پارامترهای ساخت
+model Step9ScaleUpTrial {
+  id            Int             @id @default(autoincrement())
+  projectId     Int
+  project       ContractProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  batchNumber   String
+  scaleUpDate   DateTime
+  batchSize     Float
+  reportFileUrl String
+  observations  String?
+  createdAt     DateTime        @default(now())
+}
+
+// گام ۱۱: ساختار ماژول‌های پرونده CTD
+model Step11CtdModule {
+  id            Int             @id @default(autoincrement())
+  projectId     Int
+  project       ContractProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  moduleSection String // e.g. "Module 3.2.P.1", "Module 3.2.P.2", "Module 3.2.P.8"
+  sectionTitle  String
+  fileUrl       String
+  version       String?
+  approvedByRd  Boolean         @default(false)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+// ==========================================
+// ۴. انواع شمارشی (Enums)
+// ==========================================
+
+enum Role {
+  ADMIN
+  EXPERT
+  USER
+  EXRD
+  MGRD
+  EXQC
+  MGQC
+  EXQA
+  MGQA
+  EXP
+  MGP
+}
+
+enum DrugProductStatus {
+  SUBMITTED
+  REFERRED_TO_EXPERT
+  RETURNED_BY_EXPERT
+  NEED_MORE_INFO
+  RESUBMITTED_BY_APPLICANT
+  RESULT_SUBMITTED
+  SENT_TO_USER
+  COMPLETED
+  REJECTED
+}
+
+enum DrugProductActorType {
+  ADMIN
+  EXPERTRD
+  MANEAGERRD
+  EXPERTQC
+  MANEAGERQC
+  EXPERTQA
+  MANEAGERQA
+  EXPERTP
+  MANEAGERP
+  APPLICANT
+  SYSTEM
+}
+
+enum ProjectStep {
+  STEP_1_TO_4
+  STEP_5_MOA_SPEC
+  STEP_6_FINAL_SPEC
+  STEP_7_STABILITY_FP
+  STEP_8_FORMULATION_TANKS
+  STEP_9_SCALE_UP
+  STEP_10_STABILITY_SCALE_UP
+  STEP_11_CTD
+  COMPLETED
+}
+
+enum ProjectStatus {
+  DRAFT
+  PENDING_RD_REVIEW
+  REJECTED_RD
+  APPROVED_RD
+  COMPLETED
+}
+
+enum StabilityStage {
+  FINISHED_PRODUCT
+  SCALE_UP
+}
+
+enum StabilityCondition {
+  ACCELERATED
+  LONG_TERM
+  INTERMEDIATE
+}
+
+enum ReviewAction {
+  SUBMIT
+  APPROVE
+  REJECT
+}
