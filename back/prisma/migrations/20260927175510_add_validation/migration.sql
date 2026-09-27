@@ -302,6 +302,34 @@ CREATE TABLE "Step5AnalyticalDevlopFinished" (
 );
 
 -- CreateTable
+CREATE TABLE "Step6AnalyticalValidpRaw" (
+    "id" SERIAL NOT NULL,
+    "projectId" INTEGER NOT NULL,
+    "pharmacopia" BOOLEAN NOT NULL DEFAULT true,
+    "assayFileUrl" TEXT,
+    "impurityFileUrl" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "userId" INTEGER,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Step6AnalyticalValidpRaw_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Step6AnalyticalValidFinished" (
+    "id" SERIAL NOT NULL,
+    "projectId" INTEGER NOT NULL,
+    "pharmacopia" BOOLEAN NOT NULL DEFAULT true,
+    "assayFileUrl" TEXT,
+    "impurityFileUrl" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "userId" INTEGER,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Step6AnalyticalValidFinished_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "ContractSpecification" (
     "id" SERIAL NOT NULL,
     "projectId" INTEGER NOT NULL,
@@ -503,6 +531,9 @@ CREATE INDEX "Step4Packaging_userId_idx" ON "Step4Packaging"("userId");
 CREATE UNIQUE INDEX "Step5AnalyticalDevlopFinished_projectId_key" ON "Step5AnalyticalDevlopFinished"("projectId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Step6AnalyticalValidFinished_projectId_key" ON "Step6AnalyticalValidFinished"("projectId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "ContractSpecification_projectId_stage_key" ON "ContractSpecification"("projectId", "stage");
 
 -- CreateIndex
@@ -600,6 +631,18 @@ ALTER TABLE "Step5AnalyticalDevlopFinished" ADD CONSTRAINT "Step5AnalyticalDevlo
 
 -- AddForeignKey
 ALTER TABLE "Step5AnalyticalDevlopFinished" ADD CONSTRAINT "Step5AnalyticalDevlopFinished_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Step6AnalyticalValidpRaw" ADD CONSTRAINT "Step6AnalyticalValidpRaw_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "ContractProject"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Step6AnalyticalValidpRaw" ADD CONSTRAINT "Step6AnalyticalValidpRaw_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Step6AnalyticalValidFinished" ADD CONSTRAINT "Step6AnalyticalValidFinished_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "ContractProject"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Step6AnalyticalValidFinished" ADD CONSTRAINT "Step6AnalyticalValidFinished_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ContractSpecification" ADD CONSTRAINT "ContractSpecification_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "ContractProject"("id") ON DELETE CASCADE ON UPDATE CASCADE;

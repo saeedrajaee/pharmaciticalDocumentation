@@ -27,6 +27,11 @@ import { AnalyticalDevlopRawModule } from './analytical-devlop-raw/analytical-de
 import { AnalyticalDevlopFinishedService } from './analytical-devlop-finished/analytical-devlop-finished.service';
 import { AnalyticalDevlopFinishedController } from './analytical-devlop-finished/analytical-devlop-finished.controller';
 import { AnalyticalDevlopFinishedModule } from './analytical-devlop-finished/analytical-devlop-finished.module';
+import { AnalyticalValidRawModule } from './analytical-valid-raw/analytical-valid-raw.module';
+import { AnalyticalValidFinishedController } from './analytical-valid-finished/analytical-valid-finished.controller';
+import { AnalyticalValidFinishedModule } from './analytical-valid-finished/analytical-valid-finished.module';
+import { FurmolationDevelopService } from './furmolation-develop/furmolation-develop.service';
+import { FurmolationDevelopModule } from './furmolation-develop/furmolation-develop.module';
 
 @Module({
   imports: [
@@ -57,6 +62,10 @@ import { AnalyticalDevlopFinishedModule } from './analytical-devlop-finished/ana
     PreFurmolaPackagingModule,
     AnalyticalDevlopRawModule,
     AnalyticalDevlopFinishedModule,
+    AnalyticalValidRawModule,
+    AnalyticalValidFinishedModule,
+    FurmolationDevelopModule,
   ],
+
 })
 export class AppModule {}

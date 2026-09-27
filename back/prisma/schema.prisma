@@ -37,6 +37,9 @@ model User {
   step4Packagings                Step4Packaging[]
   step5AnalyticalDevlopRaws      Step5AnalyticalDevlopRaw[]
   step5AnalyticalDevlopFinisheds Step5AnalyticalDevlopFinished[]
+  step6AnalyticalValidpRaws      Step6AnalyticalValidpRaw[]
+  step6AnalyticalValidFinisheds  Step6AnalyticalValidFinished[]
+  step7FurmolationDevelopments   Step7FurmolationDevelopment[]
 }
 
 // ==========================================
@@ -193,6 +196,9 @@ model ContractProject {
   step4Packagings               Step4Packaging[]
   step5AnalyticalDevlopRaws     Step5AnalyticalDevlopRaw[]
   step5AnalyticalDevlopFinished Step5AnalyticalDevlopFinished?
+  step6AnalyticalValidpRaws     Step6AnalyticalValidpRaw[]
+  step6AnalyticalValidFinisheds Step6AnalyticalValidFinished?
+  step7FurmolationDevelopments  Step7FurmolationDevelopment[]
 }
 
 // گام ۱: مطالعات سورس و مقالات علمی (چندردیفی)
@@ -337,9 +343,9 @@ model Step5AnalyticalDevlopRaw {
 // گام ۵: متدهای آنالیز Finished
 model Step5AnalyticalDevlopFinished {
   id                 Int             @id @default(autoincrement())
-  projectId          Int             @unique  // <-- اضافه کردن @unique در اینجا
+  projectId          Int             @unique // <-- اضافه کردن @unique در اینجا
   project            ContractProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  pharmacopia        String  //USP, BP, EP, JP, NA
+  pharmacopia        String //USP, BP, EP, JP, NA
   pharmacopiaFileUrl String?
   specFileUrl        String?
   moaFileUrl         String?
@@ -349,6 +355,48 @@ model Step5AnalyticalDevlopFinished {
   updatedAt          DateTime        @updatedAt
 }
 
+// گام 6: متدهای اعتبار سنجی خام
+model Step6AnalyticalValidpRaw {
+  id              Int             @id @default(autoincrement())
+  projectId       Int
+  project         ContractProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  pharmacopia     Boolean         @default(true)
+  assayFileUrl    String?
+  impurityFileUrl String?
+  createdAt       DateTime        @default(now())
+  userId          Int?
+  user            User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  updatedAt       DateTime        @updatedAt
+}
+
+// گام 6: متدهای اعتبار سنجی  Finished
+model Step6AnalyticalValidFinished {
+  id              Int             @id @default(autoincrement())
+  projectId       Int             @unique // <-- اضافه کردن @unique در اینجا
+  project         ContractProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  pharmacopia     Boolean         @default(true)
+  assayFileUrl    String?
+  impurityFileUrl String?
+  createdAt       DateTime        @default(now())
+  userId          Int?
+  user            User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  updatedAt       DateTime        @updatedAt
+}
+
+// گام 7: توسعه فومولاسیون
+model Step7FurmolationDevelopment {
+  id                  Int             @id @default(autoincrement())
+  projectId           Int
+  project             ContractProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  furmol              String?
+  date                DateTime        @default(now())
+  manufacturingMethod String?
+  packaging           String?
+  createdAt           DateTime        @default(now())
+  userId              Int?
+  user                User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  updatedAt           DateTime        @updatedAt
+}
 
 // گام ۶: مشخصات نهایی محصول (Final Specification) + مشخصات مرحله Scale-Up
 model ContractSpecification {

@@ -13,6 +13,9 @@ import Step4PreFormulationComponent from "../step1/Step1PreFurmola";
 import Step4Packaging from "../step1/Step1PreFurmolaPackaging";
 import Step2AnalyticalDevlopRaw from "../step2/Step2AnalyticalDevlopRaw";
 import Step5AnalyticalDevlopFinished from "../step2/Step2AnalyticalDevlopFinished";
+import Step6AnalyticalValidRaw from "../step3/Step3AnalyticalValidRaw";
+import Step6AnalyticalValidFinished from "../step3/Step3AnalyticalvalidFinished";
+import Step7FormulationDevelopment from "../step4/Step4FurmolaDevelop";
 
 // تب‌هایی که طبق رفتار فعلی همیشه به‌عنوان دارای داده نشان داده می‌شوند.
 const STATIC_TABS_WITH_DATA = new Set([
@@ -67,9 +70,7 @@ const WORKFLOW_STEPS = [
     description:
       "Prototype design, composition optimization, and screening trials.",
     tabs: [
-      { id: "overview", label: "Overview" },
-      { id: "batches", label: "Trial Batches" },
-      { id: "results", label: "Results" },
+      { id: "furmolationDevelop", label: "Formulation Development" },
     ],
   },
   {
@@ -251,7 +252,18 @@ function TabContent({
     return <Step5AnalyticalDevlopFinished projectId={safeProject.id} />;
   }  
 
-  Step5AnalyticalDevlopFinished
+        if (activeTabId === "rawMaterialValidation") {
+    return <Step6AnalyticalValidRaw projectId={safeProject.id} />;
+  }  
+      if (activeTabId === "finishedProductValidation") {
+    return <Step6AnalyticalValidFinished projectId={safeProject.id} />;
+  }  
+
+      if (activeTabId === "furmolationDevelop") {
+    return <Step7FormulationDevelopment projectId={safeProject.id} />;
+  }  
+
+  furmolationDevelop
 
   if (activeTabId === "batches") {
     return (

@@ -284,3 +284,107 @@ export const createAnalyticalDevlopFinishedSchema = z.object({
 
 export const updateAnalyticalDevlopFinishedSchema =
   createAnalyticalDevlopFinishedSchema.partial();
+
+
+export const parseBooleanOptionalWithDefaultTrue = z.preprocess(
+  transformToBoolean,
+  z.boolean().optional().default(true),
+);
+
+// ==========================================
+// 12. Analytical Valid Raw (Step 6) Schemas
+// مطابق Prisma:
+// pharmacopia Boolean @default(true)
+// assayFileUrl String?
+// impurityFileUrl String?
+// ==========================================
+
+export const createAnalyticalValidRawSchema = z.object({
+  pharmacopia: parseBooleanOptionalWithDefaultTrue,
+  assayFileUrl: z.string().optional().nullable(),
+  impurityFileUrl: z.string().optional().nullable(),
+});
+
+export const updateAnalyticalValidRawSchema =
+  createAnalyticalValidRawSchema.partial();
+
+
+  const optionalFileUrlSchema = z
+  .string({ invalid_type_error: "آدرس فایل باید متن باشد" })
+  .trim()
+  .nullable()
+  .optional();
+
+/**
+ * ۱) اسکیمای ایجاد رکورد Step6 Analytical Valid Finished
+ */
+const booleanPreprocessor = (val) => {
+  if (typeof val === "boolean") return val;
+  if (typeof val === "string") {
+    const normalized = val.trim().toLowerCase();
+    if (["true", "1", "yes"].includes(normalized)) return true;
+    if (["false", "0", "no"].includes(normalized)) return false;
+  }
+  if (typeof val === "number") {
+    if (val === 1) return true;
+    if (val === 0) return false;
+  }
+  return val;
+};
+
+/**
+ * Schema برای ایجاد رکورد Step 6 Finished
+ */
+export const createAnalyticalValidFinishedSchema = z.object({
+  pharmacopia: z
+    .preprocess(
+      booleanPreprocessor,
+      z.boolean({
+        invalid_type_error: "نوع باید به درستی انتخاب شود (Verification یا Validation)",
+      })
+    )
+    .optional(),
+
+  assayFileUrl: z.string().trim().nullable().optional(),
+  impurityFileUrl: z.string().trim().nullable().optional(),
+});
+
+/**
+ * Schema برای ویرایش رکورد Step 6 Finished
+ */
+export const updateAnalyticalValidFinishedSchema =
+  createAnalyticalValidFinishedSchema.partial();
+
+  // ==========================================
+// 13. Formulation Development (Step 7) Schemas
+// مطابق CreateStep7FormulationDevelopmentDto
+// ==========================================
+
+const optionalStep7StringSchema = z
+  .string({ invalid_type_error: "مقدار باید متنی باشد" })
+  .trim()
+  .nullable()
+  .optional();
+
+const optionalStep7DateSchema = z.preprocess(
+  (value) => {
+    if (value === "" || value === null || value === undefined) {
+      return undefined;
+    }
+
+    return value;
+  },
+  z.coerce.date({
+    invalid_type_error: "فرمت تاریخ نامعتبر است",
+  }).optional(),
+);
+
+export const createStep7FormulationDevelopmentSchema = z.object({
+  furmol: optionalStep7StringSchema,
+  date: optionalStep7DateSchema,
+  manufacturingMethod: optionalStep7StringSchema,
+  packaging: optionalStep7StringSchema,
+});
+
+export const updateStep7FormulationDevelopmentSchema =
+  createStep7FormulationDevelopmentSchema.partial();
