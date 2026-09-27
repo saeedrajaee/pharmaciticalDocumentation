@@ -6,7 +6,7 @@ import {
   deleteFurmolationDevelopAction,
   getFurmolationDevelopListAction,
   updateFurmolationDevelopAction,
-} from "@/app/actions/furmolation-development-action";
+} from "@/app/actions/formulation-development-action";
 
 const isActionError = (res) => res?.error === true || res?.success === false;
 
