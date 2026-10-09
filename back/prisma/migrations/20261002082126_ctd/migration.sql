@@ -330,6 +330,21 @@ CREATE TABLE "Step6AnalyticalValidFinished" (
 );
 
 -- CreateTable
+CREATE TABLE "Step7FurmolationDevelopment" (
+    "id" SERIAL NOT NULL,
+    "projectId" INTEGER NOT NULL,
+    "furmol" TEXT,
+    "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "manufacturingMethod" TEXT,
+    "packaging" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "userId" INTEGER,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Step7FurmolationDevelopment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "ContractSpecification" (
     "id" SERIAL NOT NULL,
     "projectId" INTEGER NOT NULL,
@@ -352,6 +367,7 @@ CREATE TABLE "ContractSpecification" (
     "preservativeContent" DOUBLE PRECISION,
     "uniformityOfDosage" DOUBLE PRECISION DEFAULT 15.0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "userId" INTEGER,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "ContractSpecification_pkey" PRIMARY KEY ("id")
@@ -362,33 +378,19 @@ CREATE TABLE "ContractSpecImpurity" (
     "id" SERIAL NOT NULL,
     "specificationId" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
-    "limit" DOUBLE PRECISION NOT NULL,
+    "limit" DOUBLE PRECISION,
     "description" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "ContractSpecImpurity_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "ContractBatch" (
-    "id" SERIAL NOT NULL,
-    "projectId" INTEGER NOT NULL,
-    "stage" "StabilityStage" NOT NULL DEFAULT 'FINISHED_PRODUCT',
-    "batchNumber" TEXT NOT NULL,
-    "batchDate" TIMESTAMP(3) NOT NULL,
-    "description" TEXT,
-    "uploadDoc" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "ContractBatch_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "ContractSpecImpurity_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "ContractResult" (
     "id" SERIAL NOT NULL,
     "batchId" INTEGER NOT NULL,
-    "condition" "StabilityCondition" NOT NULL,
+    "accelrator" TEXT,
     "month" INTEGER NOT NULL,
     "appearance" BOOLEAN NOT NULL DEFAULT true,
     "identification1" BOOLEAN NOT NULL DEFAULT true,
@@ -403,6 +405,7 @@ CREATE TABLE "ContractResult" (
     "endotoxin" DOUBLE PRECISION,
     "osmolarity" DOUBLE PRECISION,
     "uniformityOfDosage" DOUBLE PRECISION,
+    "userId" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -410,10 +413,26 @@ CREATE TABLE "ContractResult" (
 );
 
 -- CreateTable
+CREATE TABLE "ContractBatch" (
+    "id" SERIAL NOT NULL,
+    "projectId" INTEGER NOT NULL,
+    "stage" "StabilityStage" NOT NULL DEFAULT 'FINISHED_PRODUCT',
+    "batchNumber" TEXT NOT NULL,
+    "batchDate" TIMESTAMP(3) NOT NULL,
+    "description" TEXT,
+    "uploadDoc" TEXT,
+    "userId" INTEGER,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ContractBatch_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "ContractResultImpurity" (
     "id" SERIAL NOT NULL,
     "resultId" INTEGER NOT NULL,
-    "name" TEXT NOT NULL,
+    "specImpurityId" INTEGER NOT NULL,
     "value" DOUBLE PRECISION NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -437,46 +456,44 @@ CREATE TABLE "Step8FormulationBOM" (
 );
 
 -- CreateTable
-CREATE TABLE "Step8ManufacturingTank" (
-    "id" SERIAL NOT NULL,
-    "projectId" INTEGER NOT NULL,
-    "tankTag" TEXT NOT NULL,
-    "tankCapacity" DOUBLE PRECISION NOT NULL,
-    "tankMaterial" TEXT NOT NULL,
-    "filterSpecs" TEXT,
-    "flowDiagramUrl" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "Step8ManufacturingTank_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Step9ScaleUpTrial" (
+CREATE TABLE "Step6ScaleUpTrial" (
     "id" SERIAL NOT NULL,
     "projectId" INTEGER NOT NULL,
     "batchNumber" TEXT NOT NULL,
-    "scaleUpDate" TIMESTAMP(3) NOT NULL,
-    "batchSize" DOUBLE PRECISION NOT NULL,
-    "reportFileUrl" TEXT NOT NULL,
-    "observations" TEXT,
+    "scaleUpManufacturingProcess" TEXT NOT NULL,
+    "reportFileUrl" TEXT,
+    "manufacturingProcessFileUrl" TEXT,
+    "userId" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "Step9ScaleUpTrial_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Step6ScaleUpTrial_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "Step11CtdModule" (
+CREATE TABLE "Step7ScaleUpFinal" (
     "id" SERIAL NOT NULL,
     "projectId" INTEGER NOT NULL,
-    "moduleSection" TEXT NOT NULL,
-    "sectionTitle" TEXT NOT NULL,
-    "fileUrl" TEXT NOT NULL,
-    "version" TEXT,
-    "approvedByRd" BOOLEAN NOT NULL DEFAULT false,
+    "productionTechnologyTransferDocumentFileUrl" TEXT,
+    "technologyTransferDocumentQCFileUrl" TEXT,
+    "userId" INTEGER,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Step7ScaleUpFinal_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Step8CtdModule" (
+    "id" SERIAL NOT NULL,
+    "projectId" INTEGER NOT NULL,
+    "ctdFileUrl" TEXT,
+    "fdaApproval" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "fdaApprovalLetterNumber" TEXT,
+    "fdaApprovalLetterFileUrl" TEXT,
+    "userId" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Step11CtdModule_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Step8CtdModule_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -537,10 +554,16 @@ CREATE UNIQUE INDEX "Step6AnalyticalValidFinished_projectId_key" ON "Step6Analyt
 CREATE UNIQUE INDEX "ContractSpecification_projectId_stage_key" ON "ContractSpecification"("projectId", "stage");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "ContractSpecImpurity_specificationId_name_key" ON "ContractSpecImpurity"("specificationId", "name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ContractResult_batchId_month_key" ON "ContractResult"("batchId", "month");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "ContractBatch_projectId_stage_batchNumber_key" ON "ContractBatch"("projectId", "stage", "batchNumber");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ContractResult_batchId_condition_month_key" ON "ContractResult"("batchId", "condition", "month");
+CREATE UNIQUE INDEX "ContractResultImpurity_resultId_specImpurityId_key" ON "ContractResultImpurity"("resultId", "specImpurityId");
 
 -- AddForeignKey
 ALTER TABLE "DrugProduct" ADD CONSTRAINT "DrugProduct_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -645,28 +668,55 @@ ALTER TABLE "Step6AnalyticalValidFinished" ADD CONSTRAINT "Step6AnalyticalValidF
 ALTER TABLE "Step6AnalyticalValidFinished" ADD CONSTRAINT "Step6AnalyticalValidFinished_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Step7FurmolationDevelopment" ADD CONSTRAINT "Step7FurmolationDevelopment_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "ContractProject"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Step7FurmolationDevelopment" ADD CONSTRAINT "Step7FurmolationDevelopment_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "ContractSpecification" ADD CONSTRAINT "ContractSpecification_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "ContractProject"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ContractSpecification" ADD CONSTRAINT "ContractSpecification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ContractSpecImpurity" ADD CONSTRAINT "ContractSpecImpurity_specificationId_fkey" FOREIGN KEY ("specificationId") REFERENCES "ContractSpecification"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "ContractResult" ADD CONSTRAINT "ContractResult_batchId_fkey" FOREIGN KEY ("batchId") REFERENCES "ContractBatch"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ContractResult" ADD CONSTRAINT "ContractResult_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "ContractBatch" ADD CONSTRAINT "ContractBatch_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "ContractProject"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ContractResult" ADD CONSTRAINT "ContractResult_batchId_fkey" FOREIGN KEY ("batchId") REFERENCES "ContractBatch"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ContractBatch" ADD CONSTRAINT "ContractBatch_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ContractResultImpurity" ADD CONSTRAINT "ContractResultImpurity_resultId_fkey" FOREIGN KEY ("resultId") REFERENCES "ContractResult"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "ContractResultImpurity" ADD CONSTRAINT "ContractResultImpurity_specImpurityId_fkey" FOREIGN KEY ("specImpurityId") REFERENCES "ContractSpecImpurity"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Step8FormulationBOM" ADD CONSTRAINT "Step8FormulationBOM_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "ContractProject"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Step8ManufacturingTank" ADD CONSTRAINT "Step8ManufacturingTank_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "ContractProject"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Step6ScaleUpTrial" ADD CONSTRAINT "Step6ScaleUpTrial_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "ContractProject"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Step9ScaleUpTrial" ADD CONSTRAINT "Step9ScaleUpTrial_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "ContractProject"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Step6ScaleUpTrial" ADD CONSTRAINT "Step6ScaleUpTrial_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Step11CtdModule" ADD CONSTRAINT "Step11CtdModule_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "ContractProject"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Step7ScaleUpFinal" ADD CONSTRAINT "Step7ScaleUpFinal_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "ContractProject"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Step7ScaleUpFinal" ADD CONSTRAINT "Step7ScaleUpFinal_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Step8CtdModule" ADD CONSTRAINT "Step8CtdModule_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "ContractProject"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Step8CtdModule" ADD CONSTRAINT "Step8CtdModule_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;

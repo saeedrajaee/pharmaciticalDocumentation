@@ -10,28 +10,28 @@ import { SpecificationModule } from './specification/specification.module';
 import { BatchModule } from './batch/batch.module';
 import { ResultModule } from './result/result.module';
 import { ContractProjectModule } from './contract-projects/contract-project.module';
-import { StudyController } from './study/study.controller';
-import { StudyService } from './study/study.service';
 import { StudyModule } from './study/study.module';
 import { RawMaterialCoaModule } from './raw-material-coa/raw-material-coa.module';
-import { FormulationMaterialsController } from './formulation-materials/formulation-materials.controller';
 import { FormulationMaterialsModule } from './formulation-materials/formulation-materials.module';
-import { BomService } from './bom/bom.service';
-import { BomController } from './bom/bom.controller';
 import { BomModule } from './bom/bom.module';
 import { PreFurmolaModule } from './pre-furmola/pre-furmola.module';
-import { PreFurmolaPackagingService } from './pre-furmola-packaging/pre-furmola-packaging.service';
-import { PreFurmolaPackagingController } from './pre-furmola-packaging/pre-furmola-packaging.controller';
 import { PreFurmolaPackagingModule } from './pre-furmola-packaging/pre-furmola-packaging.module';
 import { AnalyticalDevlopRawModule } from './analytical-devlop-raw/analytical-devlop-raw.module';
-import { AnalyticalDevlopFinishedService } from './analytical-devlop-finished/analytical-devlop-finished.service';
-import { AnalyticalDevlopFinishedController } from './analytical-devlop-finished/analytical-devlop-finished.controller';
 import { AnalyticalDevlopFinishedModule } from './analytical-devlop-finished/analytical-devlop-finished.module';
 import { AnalyticalValidRawModule } from './analytical-valid-raw/analytical-valid-raw.module';
-import { AnalyticalValidFinishedController } from './analytical-valid-finished/analytical-valid-finished.controller';
 import { AnalyticalValidFinishedModule } from './analytical-valid-finished/analytical-valid-finished.module';
-import { FurmolationDevelopService } from './furmolation-develop/furmolation-develop.service';
 import { FurmolationDevelopModule } from './furmolation-develop/furmolation-develop.module';
+import { ContractSpecificationModule } from './contract-specification/contract-specification.module';
+import { ContractBatchController } from './contract-batch/contract-batch.controller';
+import { ContractBatchModule } from './contract-batch/contract-batch.module';
+import { ContractResultService } from './contract-result/contract-result.service';
+import { ContractResultController } from './contract-result/contract-result.controller';
+import { ContractResultModule } from './contract-result/contract-result.module';
+import { ScaleUpTrialModule } from './scale-up-trial/scale-up-trial.module';
+import { ScaleUpFinalService } from './scale-up-final/scale-up-final.service';
+import { ScaleUpFinalController } from './scale-up-final/scale-up-final.controller';
+import { ScaleUpFinalModule } from './scale-up-final/scale-up-final.module';
+import { CtdModule } from './ctd/ctd.module';
 
 @Module({
   imports: [
@@ -65,6 +65,12 @@ import { FurmolationDevelopModule } from './furmolation-develop/furmolation-deve
     AnalyticalValidRawModule,
     AnalyticalValidFinishedModule,
     FurmolationDevelopModule,
+    ContractSpecificationModule,
+    ContractBatchModule,
+    ContractResultModule,
+    ScaleUpTrialModule,
+    ScaleUpFinalModule,
+    CtdModule,
   ],
 
 })

@@ -65,7 +65,10 @@ const getRecordFromResponse = (response) => {
   return response;
 };
 
-export default function Step5AnalyticalDevlopFinished({ projectId }) {
+export default function Step5AnalyticalDevlopFinished({
+  projectId,
+  onDataStatusChange,
+}) {
   const [mounted, setMounted] = useState(false);
   const [record, setRecord] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -82,6 +85,15 @@ export default function Step5AnalyticalDevlopFinished({ projectId }) {
     setMounted(true);
   }, []);
 
+  // بررسی وضعیت پر بودن داده‌ها و گزارش آن به والد جهت نمایش تیک سبز
+  useEffect(() => {
+    if (record && record.id) {
+      onDataStatusChange?.(true);
+    } else {
+      onDataStatusChange?.(false);
+    }
+  }, [record, onDataStatusChange]);
+
   const resetForm = () => {
     setPharmacopia("");
     setPharmacopiaFile(null);
@@ -93,6 +105,7 @@ export default function Step5AnalyticalDevlopFinished({ projectId }) {
     if (!projectId) {
       setRecord(null);
       setLoading(false);
+      onDataStatusChange?.(false);
       return;
     }
 
@@ -159,7 +172,6 @@ export default function Step5AnalyticalDevlopFinished({ projectId }) {
   const buildFormData = () => {
     const formData = new FormData();
 
-    // pharmacopia انتخابی است؛ در زمان ثبت باید یکی از گزینه‌ها انتخاب شود.
     if (pharmacopia) {
       formData.append("pharmacopia", pharmacopia);
     }
@@ -253,6 +265,7 @@ export default function Step5AnalyticalDevlopFinished({ projectId }) {
         setRecord(null);
         resetForm();
         setIsEditing(false);
+        onDataStatusChange?.(false);
         await loadData();
       } catch (error) {
         console.error(
@@ -282,7 +295,7 @@ export default function Step5AnalyticalDevlopFinished({ projectId }) {
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 bg-stone-50/80 px-4 py-3.5">
         <div>
           <h3 className="text-sm font-bold text-stone-800">
-            Step 5: Analytical Development Finished
+            Step 2: Analytical Method Development
           </h3>
 
           <p className="mt-0.5 text-xs text-stone-500">

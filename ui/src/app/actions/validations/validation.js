@@ -388,3 +388,206 @@ export const createStep7FormulationDevelopmentSchema = z.object({
 
 export const updateStep7FormulationDevelopmentSchema =
   createStep7FormulationDevelopmentSchema.partial();
+
+
+// --- Contract Specification Impurity Schema ---
+export const contractSpecImpuritySchema = z.object({
+  id: z.coerce.number().optional(),
+  name: z.string().min(1, "نام ناخالصی الزامی است"),
+  value: z.coerce.number().optional().nullable(),
+  description: z.string().optional().nullable(),
+});
+
+// --- Contract Specification Schema (Create) ---
+export const createContractSpecificationSchema = z.object({
+  descriptionAppearance: z.string().optional().nullable(),
+  identification1: z.string().optional().nullable(),
+  identification2: z.string().optional().nullable(),
+  assayMin: z.coerce.number().optional().nullable(),
+  assayMax: z.coerce.number().optional().nullable(),
+  pHMin: z.coerce.number().optional().nullable(),
+  pHMax: z.coerce.number().optional().nullable(),
+  clarity: z.string().optional().nullable(),
+  particulatedMater25: z.coerce.number().optional().nullable(),
+  particulatedMater10: z.coerce.number().optional().nullable(),
+  sterility: z.string().optional().nullable(),
+  leakTest: z.string().optional().nullable(),
+  endotoxin: z.coerce.number().optional().nullable(),
+  osmolarityMin: z.coerce.number().optional().nullable(),
+  osmolarityMax: z.coerce.number().optional().nullable(),
+  preservativeContent: z.coerce.number().optional().nullable(),
+  uniformityOfDosage: z.coerce.number().optional().nullable(),
+
+  // شناسه پروژه (الزامی)
+  projectId: z.coerce.number().int().min(1, "شناسه پروژه الزامی است"),
+
+  // شناسه کاربر (اختیاری برای ادمین)
+  userId: z.union([z.coerce.number().int().min(1), z.literal("")]).optional().nullable(),
+
+  // ناخالصی‌ها
+  impurities: z.array(contractSpecImpuritySchema).optional(),
+});
+
+// --- Contract Specification Schema (Update) ---
+export const updateContractSpecificationSchema =
+  createContractSpecificationSchema.partial();
+
+  // ==========================================
+// Contract Batch Schemas
+// مطابق CreateContractBatchDto / UpdateContractBatchDto
+// ==========================================
+
+export const createContractBatchSchema = z.object({
+
+  batchNumber: z.string().min(1, "شماره بچ الزامی است"),
+
+  batchDate: z.string().min(1, "تاریخ ساخت بچ الزامی است"),
+
+  description: z.string().optional(),
+
+  uploadDoc: z.string().optional(),
+
+  userId: z.union([z.coerce.number().int().min(1), z.literal("")]).optional(),
+});
+
+export const updateContractBatchSchema =
+  createContractBatchSchema.partial();
+
+// --- Contract Result Schemas ---
+export const contractResultImpuritySchema = z.object({
+  id: z.coerce.number().optional(),
+  name: z.string().min(1, "نام ناخالصی الزامی است"),
+  value: z.coerce.number().finite("مقدار ناخالصی باید یک عدد معتبر باشد").optional(),
+  description: z.string().optional().nullable(),
+  specificationId: z.coerce.number().int().optional(),
+});
+
+export const createContractBatchResultSchema = z.object({
+  batchId: z.coerce.number().int().min(1, "انتخاب بچ قراردادی الزامی است"),
+  accelrator: z.enum(["Accerator", "Long"]).optional(),
+  month: z
+    .coerce
+    .number()
+    .int()
+    .refine((value) => [0, 3, 6, 9, 12, 18, 24, 30, 36].includes(value), {
+      message: "ماه باید یکی از مقادیر مجاز (0, 3, 6, 9, 12, 18, 24, 30, 36) باشد",
+    }),
+  appearance: parseBoolean,
+  identification1: parseBoolean,
+  identification2: parseBoolean,
+  clarity: parseBoolean,
+  leakTest: parseBoolean,
+  sterility: parseBoolean,
+  assay: z.coerce.number().finite("Assay باید عدد معتبر باشد").optional(),
+  pH: z.coerce.number().finite("pH باید عدد معتبر باشد").optional(),
+  particulatedMater25: z.coerce.number().finite("ذرات ۲۵ میکرون باید عدد معتبر باشد").optional(),
+  particulatedMater10: z.coerce.number().finite("ذرات ۱۰ میکرون باید عدد معتبر باشد").optional(),
+  endotoxin: z.coerce.number().finite("Endotoxin باید عدد معتبر باشد").optional(),
+  osmolarity: z.coerce.number().finite("Osmolarity باید عدد معتبر باشد").optional(),
+  uniformityOfDosage: z.coerce
+    .number()
+    .finite("یکنواختی دوز باید عدد معتبر باشد")
+    .max(15, "یکنواختی دوز باید حداکثر ۱۵ باشد")
+    .optional(),
+  impurities: z.array(contractResultImpuritySchema).optional(),
+  userId: z.union([z.coerce.number().int().min(1), z.literal("")]).optional(),
+});
+
+export const updateContractBatchResultSchema = createContractBatchResultSchema.partial();
+
+// ==========================================
+// Step 6. Scale-Up Trial Schemas
+// مطابق Prisma model Step6ScaleUpTrial
+// ==========================================
+
+const optionalScaleUpTrialFileUrlSchema = z
+  .string({ invalid_type_error: "آدرس فایل باید متن باشد" })
+  .trim()
+  .nullable()
+  .optional();
+
+export const createStep6ScaleUpTrialSchema = z.object({
+  // در Prisma اجباری است
+  batchNumber: z.string().min(1, "شماره بچ الزامی است"),
+
+  // در Prisma اجباری است
+  scaleUpManufacturingProcess: z
+    .string()
+    .min(1, "فرآیند تولید Scale-up الزامی است"),
+
+  // اختیاری‌ها
+  reportFileUrl: optionalScaleUpTrialFileUrlSchema,
+  manufacturingProcessFileUrl: optionalScaleUpTrialFileUrlSchema,
+
+  // مثل سایر بخش‌ها (برای ادمین اختیاری/قابل ارسال)
+  userId: z.union([z.coerce.number().int().min(1), z.literal("")]).optional(),
+});
+
+export const updateStep6ScaleUpTrialSchema =
+  createStep6ScaleUpTrialSchema.partial();
+
+  // ==========================================
+// Step 7. Scale-Up Final Schemas
+// مطابق Prisma model Step7ScaleUpFinal
+// ==========================================
+
+const optionalStep7ScaleUpFinalFileUrlSchema = z
+  .string({ invalid_type_error: "آدرس فایل باید متن باشد" })
+  .trim()
+  .nullable()
+  .optional();
+
+export const createStep7ScaleUpFinalSchema = z.object({
+  productionTechnologyTransferDocumentFileUrl: optionalStep7ScaleUpFinalFileUrlSchema,
+
+  technologyTransferDocumentQCFileUrl: optionalStep7ScaleUpFinalFileUrlSchema,
+
+  userId: z.union([z.coerce.number().int().min(1), z.literal("")]).optional(),
+});
+
+export const updateStep7ScaleUpFinalSchema =
+  createStep7ScaleUpFinalSchema.partial();
+
+
+// ==========================================
+// Step 8. CTD Module Schemas
+// مطابق Prisma model Step8CtdModule
+// ==========================================
+
+const optionalStep8CtdFileUrlSchema = z
+  .string({ invalid_type_error: "آدرس فایل باید متن باشد" })
+  .trim()
+  .nullable()
+  .optional();
+
+const optionalStep8StringSchema = z
+  .string({ invalid_type_error: "مقدار باید متنی باشد" })
+  .trim()
+  .nullable()
+  .optional();
+
+// تاریخ (سازگار با FormData) => اگر "" بود undefined شود
+const optionalStep8DateSchema = z.preprocess(
+  (value) => {
+    if (value === "" || value === null || value === undefined) return undefined;
+    return value;
+  },
+  z.coerce.date({
+    invalid_type_error: "فرمت تاریخ تاییدیه سازمان غذا و دارو نامعتبر است",
+  }).optional(),
+);
+
+export const createStep8CtdModuleSchema = z.object({
+  ctdFileUrl: optionalStep8CtdFileUrlSchema,
+
+  fdaApproval: optionalStep8DateSchema,
+
+  fdaApprovalLetterNumber: optionalStep8StringSchema,
+
+  fdaApprovalLetterFileUrl: optionalStep8CtdFileUrlSchema,
+
+  userId: z.union([z.coerce.number().int().min(1), z.literal("")]).optional(),
+});
+
+export const updateStep8CtdModuleSchema =
+  createStep8CtdModuleSchema.partial();

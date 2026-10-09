@@ -15,7 +15,10 @@ const isActionError = (res) => {
 const getActionMessage = (res, fallback) =>
   res?.message || (typeof res?.error === "string" ? res.error : fallback);
 
-export default function Step4PreFormulationComponent({ projectId }) {
+export default function Step4PreFormulationComponent({
+  projectId,
+  onDataStatusChange,
+}) {
   const [mounted, setMounted] = useState(false);
   const [formulaList, setFormulaList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,10 +42,18 @@ export default function Step4PreFormulationComponent({ projectId }) {
     setMounted(true);
   }, []);
 
+  // پایش و ارسال وضعیت وجود داده به کامپوننت والد
+  useEffect(() => {
+    if (mounted && !loading) {
+      onDataStatusChange?.(formulaList.length > 0);
+    }
+  }, [formulaList, mounted, loading, onDataStatusChange]);
+
   const loadData = async () => {
     if (!projectId) {
       setFormulaList([]);
       setLoading(false);
+      onDataStatusChange?.(false);
       return;
     }
 

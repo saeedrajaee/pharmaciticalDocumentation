@@ -28,7 +28,7 @@ const isActionError = (res) => res?.error === true || res?.success === false;
 const getActionMessage = (res, fallback) =>
   res?.message || res?.error || fallback;
 
-export default function Step4Packaging({ projectId }) {
+export default function Step4Packaging({ projectId, onDataStatusChange }) {
   const [mounted, setMounted] = useState(false);
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -58,10 +58,18 @@ export default function Step4Packaging({ projectId }) {
     setMounted(true);
   }, []);
 
+  // پایش و ارسال وضعیت وجود داده به کامپوننت والد
+  useEffect(() => {
+    if (mounted && !loading) {
+      onDataStatusChange?.(list.length > 0);
+    }
+  }, [list, mounted, loading, onDataStatusChange]);
+
   const loadData = async () => {
     if (!projectId) {
       setList([]);
       setLoading(false);
+      onDataStatusChange?.(false);
       return;
     }
 

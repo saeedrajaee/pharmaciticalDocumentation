@@ -18,7 +18,7 @@ const getFileUrl = (path) => {
   return `${BACKEND_URL}${cleanPath.startsWith("/") ? cleanPath : `/${cleanPath}`}`;
 };
 
-export default function Step3FinishedCoaSection({ projectId }) {
+export default function Step3FinishedCoaSection({ projectId, onDataStatusChange }) {
   const [mounted, setMounted] = useState(false);
   const [coaList, setCoaList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,17 +41,32 @@ export default function Step3FinishedCoaSection({ projectId }) {
     setMounted(true);
   }, []);
 
+  // پایش و ارسال وضعیت وجود داده به کامپوننت والد
+  useEffect(() => {
+    if (mounted && !loading) {
+      onDataStatusChange?.(coaList.length > 0);
+    }
+  }, [coaList, mounted, loading, onDataStatusChange]);
+
   const loadData = async () => {
-    if (!projectId) return;
+    if (!projectId) {
+      setCoaList([]);
+      setLoading(false);
+      onDataStatusChange?.(false);
+      return;
+    }
 
     setLoading(true);
     try {
       const data = await getFinishedCoaListAction(projectId);
       if (Array.isArray(data)) {
         setCoaList(data);
+      } else {
+        setCoaList([]);
       }
     } catch (err) {
       console.error("Error loading Finished COA records:", err);
+      setCoaList([]);
     } finally {
       setLoading(false);
     }

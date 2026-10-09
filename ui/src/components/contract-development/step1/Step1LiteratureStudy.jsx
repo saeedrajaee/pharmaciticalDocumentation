@@ -18,7 +18,7 @@ const getFileUrl = (path) => {
   return `${BACKEND_URL}${cleanPath.startsWith("/") ? cleanPath : `/${cleanPath}`}`;
 };
 
-export default function Step1StudiesSection({ projectId }) {
+export default function Step1StudiesSection({ projectId, onDataStatusChange }) {
   const [mounted, setMounted] = useState(false);
   const [studies, setStudies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -42,16 +42,32 @@ export default function Step1StudiesSection({ projectId }) {
     setMounted(true);
   }, []);
 
+  // پایش و ارسال وضعیت وجود داده به کامپوننت والد
+  useEffect(() => {
+    if (mounted && !loading) {
+      onDataStatusChange?.(studies.length > 0);
+    }
+  }, [studies, mounted, loading, onDataStatusChange]);
+
   const loadData = async () => {
-    if (!projectId) return;
+    if (!projectId) {
+      setStudies([]);
+      setLoading(false);
+      onDataStatusChange?.(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const data = await getStudiesAction(projectId);
       if (Array.isArray(data)) {
         setStudies(data);
+      } else {
+        setStudies([]);
       }
     } catch (err) {
       console.error("Error loading studies:", err);
+      setStudies([]);
     } finally {
       setLoading(false);
     }
@@ -278,7 +294,13 @@ export default function Step1StudiesSection({ projectId }) {
             {loading ? (
               <tr>
                 <td colSpan={5} className="px-4 py-8 text-center text-stone-400">
-                  Loading studies...
+                  <div className="flex items-center justify-center gap-2">
+                    <svg className="h-4 w-4 animate-spin text-stone-400" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                    </svg>
+                    Loading studies...
+                  </div>
                 </td>
               </tr>
             ) : studies.length === 0 && !isAdding ? (

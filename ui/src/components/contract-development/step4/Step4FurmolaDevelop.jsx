@@ -19,7 +19,10 @@ const getActionMessage = (res, fallback) => {
   return fallback;
 };
 
-export default function Step7FormulationDevelopment({ projectId }) {
+export default function Step7FormulationDevelopment({
+  projectId,
+  onDataStatusChange,
+}) {
   const [mounted, setMounted] = useState(false);
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,10 +46,18 @@ export default function Step7FormulationDevelopment({ projectId }) {
     setMounted(true);
   }, []);
 
+  // گزارش وضعیت پر بودن/خالی بودن داده‌ها به کامپوننت والد
+  useEffect(() => {
+    if (mounted && !loading) {
+      onDataStatusChange?.(list.length > 0);
+    }
+  }, [list, mounted, loading, onDataStatusChange]);
+
   const loadData = async () => {
     if (!projectId) {
       setList([]);
       setLoading(false);
+      onDataStatusChange?.(false);
       return;
     }
 
@@ -196,7 +207,7 @@ export default function Step7FormulationDevelopment({ projectId }) {
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 bg-stone-50/80 px-4 py-3.5 backdrop-blur-sm">
         <div>
           <h3 className="text-sm font-bold text-stone-800">
-            Step 7: Formulation Development
+            Step 4: Formulation Development
           </h3>
           <p className="mt-0.5 text-xs text-stone-500">
             Manage formulation records, dates, manufacturing methods, and packaging specifications

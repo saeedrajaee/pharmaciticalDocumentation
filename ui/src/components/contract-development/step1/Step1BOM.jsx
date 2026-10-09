@@ -38,7 +38,7 @@ const isActionError = (res) => {
 const getActionMessage = (res, fallback) =>
   res?.message || res?.error || fallback;
 
-export default function Step1BOM({ projectId }) {
+export default function Step1BOM({ projectId, onDataStatusChange }) {
   const [mounted, setMounted] = useState(false);
   const [bomList, setBomList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -54,10 +54,18 @@ export default function Step1BOM({ projectId }) {
     setMounted(true);
   }, []);
 
+  // پایش و ارسال وضعیت وجود داده به کامپوننت والد
+  useEffect(() => {
+    if (mounted && !loading) {
+      onDataStatusChange?.(bomList.length > 0);
+    }
+  }, [bomList, mounted, loading, onDataStatusChange]);
+
   const loadData = async () => {
     if (!projectId) {
       setBomList([]);
       setLoading(false);
+      onDataStatusChange?.(false);
       return;
     }
 
@@ -92,7 +100,6 @@ export default function Step1BOM({ projectId }) {
     if (mounted) {
       loadData();
     }
-    // loadData عمداً در dependency قرار نگرفته تا در هر رندر دوباره ساخته نشود.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, mounted]);
 
@@ -479,9 +486,11 @@ export default function Step1BOM({ projectId }) {
                     </td>
 
                     <td className="px-4 py-3 text-stone-600">
-                      {item.createdAt
-                        ? new Date(item.createdAt).toLocaleDateString()
-                        : <span className="italic text-stone-400">-</span>}
+                      {item.createdAt ? (
+                        new Date(item.createdAt).toLocaleDateString()
+                      ) : (
+                        <span className="italic text-stone-400">-</span>
+                      )}
                     </td>
 
                     <td className="px-4 py-3 text-center">

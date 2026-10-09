@@ -41,7 +41,10 @@ const getActionMessage = (res, fallback) => {
   return fallback;
 };
 
-export default function Step2AnalyticalDevlopRaw({ projectId }) {
+export default function Step2AnalyticalDevlopRaw({
+  projectId,
+  onDataStatusChange,
+}) {
   const [mounted, setMounted] = useState(false);
   const [rawList, setRawList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -67,10 +70,20 @@ export default function Step2AnalyticalDevlopRaw({ projectId }) {
     setMounted(true);
   }, []);
 
+  // گزارش وضعیت پر بودن دیتا به کامپوننت والد جهت فعال‌سازی تیک سبز
+  useEffect(() => {
+    if (rawList && rawList.length > 0) {
+      onDataStatusChange?.(true);
+    } else {
+      onDataStatusChange?.(false);
+    }
+  }, [rawList, onDataStatusChange]);
+
   const loadData = async () => {
     if (!projectId) {
       setRawList([]);
       setLoading(false);
+      onDataStatusChange?.(false);
       return;
     }
 
@@ -136,7 +149,10 @@ export default function Step2AnalyticalDevlopRaw({ projectId }) {
           formData.append("dmfFile", newDmfFile);
         }
 
-        const res = await createAnalyticalDevlopRawAction(Number(projectId), formData);
+        const res = await createAnalyticalDevlopRawAction(
+          Number(projectId),
+          formData
+        );
 
         if (isActionError(res)) {
           alert(getActionMessage(res, "خطا در ثبت ماده اولیه آنالیز."));
@@ -217,6 +233,11 @@ export default function Step2AnalyticalDevlopRaw({ projectId }) {
           return;
         }
 
+        // بررسی اینکه اگر فقط یک آیتم بود و حذف شد وضعیت بلافاصله آپدیت شود
+        if (rawList.length <= 1) {
+          onDataStatusChange?.(false);
+        }
+
         await loadData();
       } catch (err) {
         console.error("Error deleting record:", err);
@@ -243,7 +264,7 @@ export default function Step2AnalyticalDevlopRaw({ projectId }) {
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 bg-stone-50/80 px-4 py-3.5 backdrop-blur-sm">
         <div>
           <h3 className="text-sm font-bold text-stone-800">
-            Step 5: Analytical Development (Raw Material)
+            Step 2: Analytical Method Development
           </h3>
           <p className="mt-0.5 text-xs text-stone-500">
             Manage raw material specifications, MOA, and DMF documents

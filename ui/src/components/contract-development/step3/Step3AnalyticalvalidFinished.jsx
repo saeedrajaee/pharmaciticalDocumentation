@@ -60,7 +60,10 @@ const getRecordFromResponse = (response) => {
 
 const boolToLabel = (val) => (val === true ? "Verification" : "Validation");
 
-export default function Step6AnalyticalValidFinished({ projectId }) {
+export default function Step6AnalyticalValidFinished({
+  projectId,
+  onDataStatusChange,
+}) {
   const [mounted, setMounted] = useState(false);
   const [record, setRecord] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -78,6 +81,15 @@ export default function Step6AnalyticalValidFinished({ projectId }) {
     setMounted(true);
   }, []);
 
+  // گزارش وضعیت وجود دیتا به والد برای فعال‌سازی تیک سبز
+  useEffect(() => {
+    if (record && record.id) {
+      onDataStatusChange?.(true);
+    } else {
+      onDataStatusChange?.(false);
+    }
+  }, [record, onDataStatusChange]);
+
   const resetForm = () => {
     setPharmacopia("");
     setAssayFile(null);
@@ -88,13 +100,16 @@ export default function Step6AnalyticalValidFinished({ projectId }) {
     if (!projectId) {
       setRecord(null);
       setLoading(false);
+      onDataStatusChange?.(false);
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await getAnalyticalValidFinishedAction(Number(projectId));
+      const response = await getAnalyticalValidFinishedAction(
+        Number(projectId)
+      );
 
       if (isActionError(response)) {
         console.error(
@@ -131,7 +146,11 @@ export default function Step6AnalyticalValidFinished({ projectId }) {
 
     // record.pharmacopia boolean است
     setPharmacopia(
-      record.pharmacopia === true ? "true" : record.pharmacopia === false ? "false" : ""
+      record.pharmacopia === true
+        ? "true"
+        : record.pharmacopia === false
+        ? "false"
+        : ""
     );
     setAssayFile(null);
     setImpurityFile(null);
@@ -177,8 +196,14 @@ export default function Step6AnalyticalValidFinished({ projectId }) {
         const formData = buildFormData();
 
         const response = record
-          ? await updateAnalyticalValidFinishedAction(Number(projectId), formData)
-          : await createAnalyticalValidFinishedAction(Number(projectId), formData);
+          ? await updateAnalyticalValidFinishedAction(
+              Number(projectId),
+              formData
+            )
+          : await createAnalyticalValidFinishedAction(
+              Number(projectId),
+              formData
+            );
 
         if (isActionError(response)) {
           alert(
@@ -212,7 +237,9 @@ export default function Step6AnalyticalValidFinished({ projectId }) {
 
     startTransition(async () => {
       try {
-        const response = await deleteAnalyticalValidFinishedAction(Number(projectId));
+        const response = await deleteAnalyticalValidFinishedAction(
+          Number(projectId)
+        );
 
         if (isActionError(response)) {
           alert(getActionMessage(response, "خطا در حذف رکورد."));
@@ -222,9 +249,13 @@ export default function Step6AnalyticalValidFinished({ projectId }) {
         setRecord(null);
         resetForm();
         setIsEditing(false);
+        onDataStatusChange?.(false);
         await loadData();
       } catch (error) {
-        console.error("Error deleting analytical valid finished record:", error);
+        console.error(
+          "Error deleting analytical valid finished record:",
+          error
+        );
         alert("خطا در حذف رکورد.");
       }
     });
@@ -247,7 +278,7 @@ export default function Step6AnalyticalValidFinished({ projectId }) {
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 bg-stone-50/80 px-4 py-3.5">
         <div>
           <h3 className="text-sm font-bold text-stone-800">
-            Step 6: Analytical Valid Finished
+            Step 3: Analytical Method Validation
           </h3>
 
           <p className="mt-0.5 text-xs text-stone-500">
@@ -337,7 +368,11 @@ export default function Step6AnalyticalValidFinished({ projectId }) {
       <div className="p-4">
         {loading ? (
           <div className="flex items-center justify-center gap-2 py-10 text-xs text-stone-400">
-            <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <svg
+              className="h-4 w-4 animate-spin"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
               <circle
                 className="opacity-25"
                 cx="12"
@@ -390,7 +425,9 @@ export default function Step6AnalyticalValidFinished({ projectId }) {
               <input
                 type="file"
                 disabled={isPending}
-                onChange={(event) => setAssayFile(event.target.files?.[0] || null)}
+                onChange={(event) =>
+                  setAssayFile(event.target.files?.[0] || null)
+                }
                 className="block w-full cursor-pointer text-xs text-stone-500 file:mr-2 file:rounded-md file:border-0 file:bg-blue-100 file:px-2 file:py-1 file:text-xs file:font-medium file:text-blue-800"
               />
             </div>
@@ -444,22 +481,14 @@ export default function Step6AnalyticalValidFinished({ projectId }) {
                   <th className="min-w-[160px] px-4 py-3">
                     Pharmacopia (Type)
                   </th>
-                  <th className="min-w-[160px] px-4 py-3">
-                    Assay File
-                  </th>
-                  <th className="min-w-[160px] px-4 py-3">
-                    Impurity File
-                  </th>
+                  <th className="min-w-[160px] px-4 py-3">Assay File</th>
+                  <th className="min-w-[160px] px-4 py-3">Impurity File</th>
                 </tr>
               </thead>
 
               <tbody>
                 <tr className="text-stone-700">
                   <td className="px-4 py-4 font-semibold text-green-700">
-                    {/* شرط شما: اگر yes انتخاب کرد => Verification، اگر نداشت => Validation
-                        چون ما در UI به جای yes/no از true/false استفاده کردیم:
-                        true => Verification, false => Validation
-                    */}
                     {boolToLabel(record.pharmacopia)}
                   </td>
 

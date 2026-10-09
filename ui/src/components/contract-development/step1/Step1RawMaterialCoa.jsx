@@ -28,7 +28,10 @@ const emptyRow = {
   coaFile: null,
 };
 
-export default function Step3RawMaterialCoaSection({ projectId }) {
+export default function Step3RawMaterialCoaSection({
+  projectId,
+  onDataStatusChange,
+}) {
   const [mounted, setMounted] = useState(false);
   const [coaList, setCoaList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,26 +49,42 @@ export default function Step3RawMaterialCoaSection({ projectId }) {
     setMounted(true);
   }, []);
 
+  // پایش و ارسال وضعیت وجود داده به کامپوننت والد
+  useEffect(() => {
+    if (mounted && !loading) {
+      onDataStatusChange?.(coaList.length > 0);
+    }
+  }, [coaList, mounted, loading, onDataStatusChange]);
+
   const loadData = async () => {
-    if (!projectId) return;
+    if (!projectId) {
+      setCoaList([]);
+      setLoading(false);
+      onDataStatusChange?.(false);
+      return;
+    }
 
     setLoading(true);
     try {
       const data = await getRawMaterialCoaListAction(projectId);
       if (Array.isArray(data)) {
         setCoaList(data);
+      } else {
+        setCoaList([]);
       }
     } catch (err) {
       console.error("Error loading raw material COA records:", err);
+      setCoaList([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (projectId && mounted) {
+    if (mounted) {
       loadData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, mounted]);
 
   const appendFiles = (formData, form) => {
@@ -196,42 +215,6 @@ export default function Step3RawMaterialCoaSection({ projectId }) {
       <span className="text-xs italic text-stone-400">No attachment</span>
     );
   };
-
-  const renderFileInputs = (form, setForm) => (
-    <>
-      <div className="space-y-1">
-        <label className="block text-xs font-medium text-stone-600">
-          Pharmacopoeia File
-        </label>
-        <input
-          type="file"
-          onChange={(e) =>
-            setForm({
-              ...form,
-              pharmaCopiaFile: e.target.files?.[0] || null,
-            })
-          }
-          className="block w-full text-xs text-stone-500 file:mr-2 file:rounded-md file:border-0 file:bg-blue-100 file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-blue-800 hover:file:bg-blue-200"
-        />
-      </div>
-
-      <div className="space-y-1">
-        <label className="block text-xs font-medium text-stone-600">
-          COA File
-        </label>
-        <input
-          type="file"
-          onChange={(e) =>
-            setForm({
-              ...form,
-              coaFile: e.target.files?.[0] || null,
-            })
-          }
-          className="block w-full text-xs text-stone-500 file:mr-2 file:rounded-md file:border-0 file:bg-blue-100 file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-blue-800 hover:file:bg-blue-200"
-        />
-      </div>
-    </>
-  );
 
   // جلوگیری از Hydration mismatch تا زمان مانت کامل کلاینت
   if (!mounted) {
